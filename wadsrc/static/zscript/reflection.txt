@@ -1,0 +1,79 @@
+enum RuntimeTypeInfo
+{
+	// Type
+	RTI_Class  = 1 << 0,
+	RTI_Struct = 1 << 1,
+	RTI_Method = 1 << 2,
+	RTI_Field  = 1 << 3,
+
+	// Access
+	RTI_Public    = 1 << 4,
+	RTI_Private   = 1 << 5,
+	RTI_Protected = 1 << 6,
+	RTI_Native    = 1 << 7,
+
+	// Class
+	RTI_Abstract = 1 << 8,
+
+	// Method
+	RTI_Action = 1 << 9,
+
+	// other stuff
+}
+
+struct Reflection
+{
+    native static ClassInfo GetClassInfo (class<Object> classInfo);
+}
+
+class TypeInfo : Object abstract native
+{
+	native name GetName ();
+}
+
+class ClassInfo : TypeInfo native
+{
+	//native bool Classify (RuntimeTypeInfo flags);
+	native void GetFields (out Array<FieldInfo> fields);
+	//native FieldInfo GetField (string fieldName);
+	//native MethodInfo GetMethod (string methodName);
+}
+
+class FieldInfo : TypeInfo native
+{
+	//native bool Classify (RuntimeTypeInfo flags);
+	//native class GetFieldClass ();
+	native TypeInfo GetFieldType ();
+
+	// Here we run into a problem. SetValue/GetValue.
+	// ZScript cannot store value types in Object, unlike C#.
+
+	// Meaning there may need to be wrappers for value types,
+	// which the programmer can then check for.
+
+	// Eg, GetValue(instance) for an "int" field would return
+	// an instance of the "IntReference" class, which contains
+	// a single integer field. You could then do:
+
+	// let i = IntReference(GetValue(instance)).value;
+
+	// Similarly, to set a value for a value type you'd have to
+	// do the same thing. The problem we now run into is that
+	// there needs to be a wrapper class for every type.
+	// How do we deal with user-defined structs?
+
+	// Perhaps a new reference<T> syntax is needed, similar
+	// to readonly<T>.
+
+	//native void SetValue (Object instance, Object value);
+	//native Object GetValue (Object instance);
+}
+
+/*class MethodInfo : Object native
+{
+	native string GetName ();
+	native bool Classify (RuntimeTypeInfo flags);
+
+	// same issues as SetValue/GetValue above
+	native Object Invoke (Object instance, ...);
+}*/
