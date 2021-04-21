@@ -2518,18 +2518,20 @@ static int isValid( level_info_t *info )
 DEFINE_ACTION_FUNCTION_NATIVE(_LevelInfo, isValid, isValid)
 {
 	PARAM_SELF_STRUCT_PROLOGUE(level_info_t);
-	ACTION_RETURN_BOOL(self->isValid());
+	ACTION_RETURN_BOOL(isValid(self));
 }
 
-static void ZLookupLevelName( level_info_t *info, FString *result )
+static void LookupLevelName( level_info_t *info, FString *result )
 {
 	*result = info->LookupLevelName();
 }
 
-DEFINE_ACTION_FUNCTION_NATIVE(_LevelInfo, LookupLevelName, ZLookupLevelName)
+DEFINE_ACTION_FUNCTION_NATIVE(_LevelInfo, LookupLevelName, LookupLevelName)
 {
 	PARAM_SELF_STRUCT_PROLOGUE(level_info_t);
-	ACTION_RETURN_STRING(self->LookupLevelName());
+	FString rets;
+	LookupLevelName(self,&rets);
+	ACTION_RETURN_STRING(rets);
 }
 
 static int GetLevelInfoCount()
@@ -2537,25 +2539,27 @@ static int GetLevelInfoCount()
 	return wadlevelinfos.Size();
 }
 
-static level_info_t* GetLevelInfo( int index )
-{
-	return &wadlevelinfos[index];
-}
-
 DEFINE_ACTION_FUNCTION_NATIVE(_LevelInfo, GetLevelInfoCount, GetLevelInfoCount)
 {
 	PARAM_PROLOGUE;
-	ACTION_RETURN_INT(wadlevelinfos.Size());
+	ACTION_RETURN_INT(GetLevelInfoCount());
+}
+
+static level_info_t* GetLevelInfo( unsigned int index )
+{
+	if ( index >= wadlevelinfos.Size() )
+		return nullptr;
+	return &wadlevelinfos[index];
 }
 
 DEFINE_ACTION_FUNCTION_NATIVE(_LevelInfo, GetLevelInfo, GetLevelInfo)
 {
 	PARAM_PROLOGUE;
 	PARAM_INT(index);
-	ACTION_RETURN_POINTER(&wadlevelinfos[index]);
+	ACTION_RETURN_POINTER(GetLevelInfo(index));
 }
 
-static level_info_t* ZFindLevelInfo( FString &mapname )
+static level_info_t* ZFindLevelInfo( const FString &mapname )
 {
 	return FindLevelInfo(mapname.GetChars());
 }
@@ -2564,7 +2568,7 @@ DEFINE_ACTION_FUNCTION_NATIVE(_LevelInfo, FindLevelInfo, ZFindLevelInfo)
 {
 	PARAM_PROLOGUE;
 	PARAM_STRING(mapname);
-	ACTION_RETURN_POINTER(FindLevelInfo(mapname.GetChars()));
+	ACTION_RETURN_POINTER(ZFindLevelInfo(mapname));
 }
 
 DEFINE_ACTION_FUNCTION_NATIVE(_LevelInfo, FindLevelByNum, FindLevelByNum)
@@ -2574,7 +2578,7 @@ DEFINE_ACTION_FUNCTION_NATIVE(_LevelInfo, FindLevelByNum, FindLevelByNum)
 	ACTION_RETURN_POINTER(FindLevelByNum(num));
 }
 
-static int MapExists( FString &mapname )
+static int MapExists( const FString &mapname )
 {
 	return P_CheckMapData(mapname.GetChars());
 }
@@ -2583,7 +2587,7 @@ DEFINE_ACTION_FUNCTION_NATIVE(_LevelInfo, MapExists, MapExists)
 {
 	PARAM_PROLOGUE;
 	PARAM_STRING(mapname);
-	ACTION_RETURN_BOOL(P_CheckMapData(mapname.GetChars()));
+	ACTION_RETURN_BOOL(MapExists(mapname));
 }
 
 DEFINE_ACTION_FUNCTION(_LevelInfo, MapChecksum)
@@ -2592,7 +2596,7 @@ DEFINE_ACTION_FUNCTION(_LevelInfo, MapChecksum)
 	PARAM_STRING(mapname);
 	char md5string[33] = "";
 	MapData *map = P_OpenMapData(mapname.GetChars(), true);
-	if (map != NULL)
+	if (map != nullptr)
 	{
 		uint8_t cksum[16];
 		map->GetChecksum(cksum);
